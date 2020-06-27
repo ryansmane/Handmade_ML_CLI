@@ -1,4 +1,6 @@
 import numpy as np
+from matplotlib import pyplot as plt
+
 def sigmoid(z):
     res = 1/(1+np.exp(-z))
     return res
@@ -77,10 +79,39 @@ class DeepNet():
         x=np.array(x).T
         y=np.array(y).T
         (activations, zs) = self.feed_forward(x,y)
-        print(activations[-1][0:3, 0:3])
-        print(y[0:3,0:3])
-        print(f'cost: {compute_cost(activations[-1], y, x.shape[1])}')
+        return (x, y, activations[-1])
+    
+    def display_labels(self, x, y, y_hat, url_map, first_n):
+        x = x.T[0:first_n]
+        y_hat = y_hat.T[0:first_n]
+        y = y.T[0:first_n]
+        assert x.shape[0] == y_hat.shape[0]
+        labels = list(url_map.keys())
+        rows = int(np.sqrt(first_n))
+        cols = int(first_n/rows) + int(first_n % rows)
+        fig, ax = plt.subplots(nrows=rows, ncols=cols)
 
+        image_index = 0
+        for r in range(rows):
+            for c in range(cols):
+                if image_index < first_n:
+                    rendition = np.reshape(x[image_index]*255, (32, 32, 3))
+                    rendition = rendition.astype(np.uint8)
+                    prediction = np.argmax(y_hat[image_index])
+                    actual = np.argmax(y[image_index])
+                    ax[r][c].imshow(rendition, interpolation='nearest')
+                    ax[r][c].set_title(f'y_hat: {str(labels[prediction])} y: {str(labels[actual])}')
+                    ax[r][c].set_xticklabels([])
+                    ax[r][c].set_yticklabels([])
+                    image_index += 1
+                else:
+                    ax[r][c].set_xticklabels([])
+                    ax[r][c].set_yticklabels([])
+        plt.show()
+        
+
+
+        
 
                 
 

@@ -11,8 +11,6 @@ import ast
 import numpy as np
 import requests
 
-
-
 class DataCollector:
     pass
 
