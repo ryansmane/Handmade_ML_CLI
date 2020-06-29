@@ -47,44 +47,45 @@ class UnsplashCollector(DataCollector):
             l = len(self.link_dict[key])
             print(f'{key}s found: {l}')
         
-        desired = input("""Please enter a tuple of quantities desired in the order the keys were listed.\nIf you wish to download the same amount of each category, enter that single amount instead.\n""")
+        desired = input("""Please enter a tuple of quantities desired in the order the keys were listed.\nE.g., (100,150) for 100 images from the first category and 150 images from the second\n""")
 
         res = self.translate(desired)
         return res
 
     def translate(self, desired):
-        trans = ast.literal_eval(desired) 
-        
-        if isinstance(trans, tuple) and len(trans) == len(self.link_dict.keys()):
-            for (key, limit) in zip(self.link_dict.keys(), trans):
-                print(f'{limit} {key}s desired')
-            ans = input('continue to download? (y/n)')
-            if ans == 'y':
+        try:
+            trans = ast.literal_eval(desired) 
+            if isinstance(trans, int):
+                try_again = input("Invalid input, try again: ")
+                self.translate(try_again)
+            if isinstance(trans, tuple) and len(trans) == len(self.link_dict.keys()):
                 for (key, limit) in zip(self.link_dict.keys(), trans):
-                    n = 0
-                    for index, link in enumerate(self.link_dict[key]):
-                        try:
-                            r = requests.get(link)
-                            image = Image.open(io.BytesIO(r.content)).resize((32, 32)).convert('RGB')
-                            d = np.asarray(image)
-                            d = np.ravel(d)/255
-                            categories = len(list(self.classify_map.keys()))
-                            e = np.zeros((categories,))
-                            e[self.classify_map[key]] = 1.0
-                            self.train_data.append((d, e))
-                            print(f'{n+1} {key} downloaded.')
-                            n+=1
-                            if n == limit:
-                                break
-                        except Exception as e:
-                            print(e)
-            return np.array(self.train_data)
+                    print(f'{limit} {key}s desired')
+                ans = input('continue to download? (y/n)')
+                if ans == 'y':
+                    for (key, limit) in zip(self.link_dict.keys(), trans):
+                        n = 0
+                        for index, link in enumerate(self.link_dict[key]):
+                            try:
+                                r = requests.get(link)
+                                image = Image.open(io.BytesIO(r.content)).resize((32, 32)).convert('RGB')
+                                d = np.asarray(image)
+                                d = np.ravel(d)/255
+                                categories = len(list(self.classify_map.keys()))
+                                e = np.zeros((categories,))
+                                e[self.classify_map[key]] = 1.0
+                                self.train_data.append((d, e))
+                                print(f'{n+1} {key} downloaded.')
+                                n+=1
+                                if n == limit:
+                                    break
+                            except Exception as e:
+                                print(e)
+                return np.array(self.train_data)
             
-                
-        elif isinstance(trans, int):
-            print('int')
-        else:
-            print('Invalid data type.')
+        except ValueError:
+            try_again = input("Invalid input, try again: ")
+            self.translate(try_again)
 
     def get_hrefs(self, source, key):
         self.link_dict[key] = []

@@ -5,5 +5,5 @@ import io
 from matplotlib import pyplot as plt
 
 
-x = np.array([[1, 2, 3], [0, 2, 3, 4], [3, 0 , 1]])
-print(x[0:2])
+t =tuple(i for i in range(10))
+print(t)

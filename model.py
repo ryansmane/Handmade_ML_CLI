@@ -1,5 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from PIL import Image
+import math
 
 def sigmoid(z):
     res = 1/(1+np.exp(-z))
@@ -79,7 +81,21 @@ class DeepNet():
         x=np.array(x).T
         y=np.array(y).T
         (activations, zs) = self.feed_forward(x,y)
+        print(f"Cost of test suite: {compute_cost(activations[-1], y, x.shape[1])}")
         return (x, y, activations[-1])
+    
+    def test_single(self, path, url_map):
+        image = Image.open(path).resize((32, 32)).convert('RGB')
+        d = np.asarray(image)
+        d = np.ravel(d)/255
+        test_array = np.array([d])
+        x=np.array(test_array).T
+        (activations, zs) = self.feed_forward(x,[])
+        res = np.argmax(activations[-1])
+        print('Activation vector:')
+        print(activations[-1])
+        print('Classification: ')
+        print(list(url_map.keys())[res])
     
     def display_labels(self, x, y, y_hat, url_map, first_n):
         x = x.T[0:first_n]
@@ -87,8 +103,8 @@ class DeepNet():
         y = y.T[0:first_n]
         assert x.shape[0] == y_hat.shape[0]
         labels = list(url_map.keys())
-        rows = int(np.sqrt(first_n))
-        cols = int(first_n/rows) + int(first_n % rows)
+        cols = 3
+        rows = max(2, int(math.ceil(first_n/3)))
         fig, ax = plt.subplots(nrows=rows, ncols=cols)
 
         image_index = 0
@@ -100,13 +116,14 @@ class DeepNet():
                     prediction = np.argmax(y_hat[image_index])
                     actual = np.argmax(y[image_index])
                     ax[r][c].imshow(rendition, interpolation='nearest')
-                    ax[r][c].set_title(f'y_hat: {str(labels[prediction])} y: {str(labels[actual])}')
+                    ax[r][c].set_title(f'{str(labels[prediction])}/{str(labels[actual])}')
                     ax[r][c].set_xticklabels([])
                     ax[r][c].set_yticklabels([])
                     image_index += 1
                 else:
-                    ax[r][c].set_xticklabels([])
-                    ax[r][c].set_yticklabels([])
+                    ax[r][c].axis('off')
+                    ax[r][c].axis('off')
+        fig.suptitle('prediction/actual')
         plt.show()
         
 
